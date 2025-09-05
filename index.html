@@ -1,1 +1,430 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shadow - Rede Social Anônima</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .tweet-animation { animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .like-animation { animation: pulse 0.2s ease-in-out; }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-black via-gray-900 to-gray-800 min-h-screen text-white">
+    <!-- Header -->
+    <header class="bg-black/20 backdrop-blur-sm border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <h1 class="text-2xl font-bold text-white flex items-center space-x-3">
+                    <span class="text-3xl">👤</span>
+                    <span>Shadow</span>
+                </h1>
+                <div class="flex items-center space-x-4">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-4xl mx-auto px-4 py-6">
+        <!-- Compose Tweet -->
+        <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-6 border border-white/20">
+            <div class="flex items-start space-x-4">
+                <div class="w-12 h-12 bg-gradient-to-br from-gray-700 to-black rounded flex items-center justify-center text-xl">
+                    👤
+                </div>
+                <div class="flex-1">
+                    <textarea 
+                        id="tweetText" 
+                        placeholder="O que está acontecendo? (Anônimo)"
+                        class="w-full bg-transparent text-white placeholder-gray-400 resize-none text-lg border-none outline-none"
+                        rows="3"
+                        maxlength="500"
+                    ></textarea>
+                    <div class="flex items-center justify-between mt-4">
+                        <div class="flex items-center space-x-4">
+                            <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+                            <button onclick="document.getElementById('imageInput').click()" class="flex items-center space-x-2 text-gray-400 hover:text-blue-400 transition-colors">
+                                <span class="text-xl">📷</span>
+                                <span class="text-sm font-medium">Foto</span>
+                            </button>
+                            <div id="imagePreview" class="hidden">
+                                <div class="relative inline-block">
+                                    <img id="previewImg" class="w-16 h-16 object-cover rounded-lg border border-white/20">
+                                    <button onclick="removeImage()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center hover:bg-red-600">✕</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <span id="charCount" class="text-sm text-gray-400">0/500</span>
+                            <button 
+                                id="tweetBtn"
+                                onclick="postTweet()" 
+                                class="bg-black border border-gray-600 hover:bg-gray-900 hover:border-gray-500 px-6 py-2 rounded font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled
+                            >
+                                Publicar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trending Topics -->
+        <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-6 border border-white/20">
+            <h2 class="text-xl font-bold mb-4 text-gray-200">
+                Tópicos em Destaque
+            </h2>
+            <div class="space-y-2">
+                <div class="flex items-center justify-between p-3 rounded hover:bg-white/5 cursor-pointer transition-colors border-b border-gray-800">
+                    <span class="text-gray-300">#Shadow</span>
+                    <span class="text-sm text-gray-500">12.5K posts</span>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded hover:bg-white/5 cursor-pointer transition-colors border-b border-gray-800">
+                    <span class="text-gray-300">#Privacidade</span>
+                    <span class="text-sm text-gray-500">8.2K posts</span>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded hover:bg-white/5 cursor-pointer transition-colors border-b border-gray-800">
+                    <span class="text-gray-300">#Segurança</span>
+                    <span class="text-sm text-gray-500">5.7K posts</span>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Feed -->
+        <div id="tweetFeed" class="space-y-4">
+            <!-- Sample tweets will be loaded here -->
+        </div>
+    </div>
+
+    <script>
+        let tweets = [
+            {
+                id: 1,
+                text: "A verdadeira liberdade de expressão só existe quando podemos falar sem medo de julgamento ou retaliação.",
+                timestamp: new Date(Date.now() - 300000),
+                likes: 23,
+                retweets: 5,
+                replies: 8,
+                liked: false,
+                retweeted: false,
+                isOwn: false,
+                likedBy: ['@anon15', '@anon32', '@anon7', '@anon91', '@anon44']
+            },
+            {
+                id: 2,
+                text: "Privacidade não é sobre esconder algo errado. É sobre proteger o que é certo.",
+                timestamp: new Date(Date.now() - 600000),
+                likes: 156,
+                retweets: 42,
+                replies: 31,
+                liked: false,
+                retweeted: false,
+                isOwn: false,
+                likedBy: ['@anon23', '@anon88', '@anon12', '@anon67', '@anon99']
+            },
+            {
+                id: 3,
+                text: "Em um mundo onde cada clique é rastreado, o anonimato se torna um ato de resistência.",
+                timestamp: new Date(Date.now() - 900000),
+                likes: 89,
+                retweets: 12,
+                replies: 15,
+                liked: false,
+                retweeted: false,
+                isOwn: false,
+                likedBy: ['@anon56', '@anon11', '@anon78', '@anon33', '@anon92']
+            }
+        ];
+
+        let tweetIdCounter = 4;
+        let isDarkTheme = true;
+        let currentImage = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            renderTweets();
+            
+            // Character counter
+            document.getElementById('tweetText').addEventListener('input', function() {
+                const text = this.value;
+                const charCount = text.length;
+                document.getElementById('charCount').textContent = `${charCount}/500`;
+                document.getElementById('tweetBtn').disabled = (charCount === 0 && !currentImage) || charCount > 500;
+                
+                if (charCount > 450) {
+                    document.getElementById('charCount').className = 'text-sm text-red-400';
+                } else {
+                    document.getElementById('charCount').className = 'text-sm text-gray-400';
+                }
+            });
+
+
+        });
+
+        function addEmoji(emoji) {
+            const textarea = document.getElementById('tweetText');
+            const cursorPos = textarea.selectionStart;
+            const textBefore = textarea.value.substring(0, cursorPos);
+            const textAfter = textarea.value.substring(cursorPos);
+            textarea.value = textBefore + emoji + textAfter;
+            textarea.focus();
+            textarea.setSelectionRange(cursorPos + emoji.length, cursorPos + emoji.length);
+            
+            // Trigger input event to update character count
+            textarea.dispatchEvent(new Event('input'));
+        }
+
+        function postTweet() {
+            const tweetText = document.getElementById('tweetText').value.trim();
+            if (!tweetText && !currentImage) return;
+
+            const newTweet = {
+                id: tweetIdCounter++,
+                text: tweetText,
+                timestamp: new Date(),
+                likes: 0,
+                retweets: 0,
+                replies: 0,
+                liked: false,
+                retweeted: false,
+                image: currentImage,
+                isOwn: true,
+                likedBy: []
+            };
+
+            tweets.unshift(newTweet);
+            document.getElementById('tweetText').value = '';
+            document.getElementById('charCount').textContent = '0/500';
+            document.getElementById('tweetBtn').disabled = true;
+            
+            // Reset image
+            currentImage = null;
+            document.getElementById('imagePreview').classList.add('hidden');
+            
+            renderTweets();
+            
+            // Show success animation
+            const tweetBtn = document.getElementById('tweetBtn');
+            tweetBtn.textContent = 'Publicado ✓';
+            setTimeout(() => {
+                tweetBtn.textContent = 'Publicar';
+            }, 2000);
+        }
+
+        function renderTweets() {
+            const feed = document.getElementById('tweetFeed');
+            feed.innerHTML = tweets.map(tweet => `
+                <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 tweet-animation">
+                    <div class="flex items-start space-x-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-gray-700 to-black rounded flex items-center justify-center text-xl">
+                            👤
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-2 mb-2">
+                                <span class="font-semibold text-gray-300">Shadows</span>
+                                <span class="text-gray-500 text-sm">@anon${tweet.id}</span>
+                                <span class="text-gray-500 text-sm">•</span>
+                                <span class="text-gray-500 text-sm">${formatTime(tweet.timestamp)}</span>
+                                ${tweet.isOwn ? '<span class="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">Seu post</span>' : ''}
+                            </div>
+                            <p class="text-white mb-4 leading-relaxed">${tweet.text}</p>
+                            ${tweet.image ? `<div class="mb-4"><img src="${tweet.image}" class="rounded-lg max-w-full h-auto border border-white/20" alt="Imagem do post"></div>` : ''}
+                            <div class="flex items-center space-x-6">
+                                <button onclick="toggleReply(${tweet.id})" class="flex items-center space-x-2 text-gray-400 hover:text-blue-400 transition-colors group">
+                                    <div class="p-2 rounded group-hover:bg-blue-400/20 transition-colors">
+                                        💬
+                                    </div>
+                                    <span class="text-sm">${tweet.replies}</span>
+                                </button>
+                                <button onclick="toggleLike(${tweet.id})" class="flex items-center space-x-2 text-gray-400 hover:text-red-400 transition-colors group ${tweet.liked ? 'text-red-400' : ''}">
+                                    <div class="p-2 rounded group-hover:bg-red-400/20 transition-colors">
+                                        ${tweet.liked ? '❤️' : '🤍'}
+                                    </div>
+                                    <span class="text-sm">${tweet.likes}</span>
+                                </button>
+                                ${tweet.isOwn && tweet.likes > 0 ? `<button onclick="showLikes(${tweet.id})" class="flex items-center space-x-2 text-gray-400 hover:text-yellow-400 transition-colors group">
+                                    <div class="p-2 rounded group-hover:bg-yellow-400/20 transition-colors">
+                                        👁️
+                                    </div>
+                                    <span class="text-sm">Ver curtidas</span>
+                                </button>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleLike(tweetId) {
+            const tweet = tweets.find(t => t.id === tweetId);
+            if (tweet) {
+                const userHandle = `@anon${Math.floor(Math.random() * 999) + 1}`;
+                
+                tweet.liked = !tweet.liked;
+                if (tweet.liked) {
+                    tweet.likes += 1;
+                    if (!tweet.likedBy) tweet.likedBy = [];
+                    tweet.likedBy.push(userHandle);
+                } else {
+                    tweet.likes -= 1;
+                    if (tweet.likedBy) {
+                        const index = tweet.likedBy.indexOf(userHandle);
+                        if (index > -1) tweet.likedBy.splice(index, 1);
+                    }
+                }
+                renderTweets();
+                
+                // Add animation
+                const likeBtn = event.target.closest('button');
+                likeBtn.classList.add('like-animation');
+                setTimeout(() => likeBtn.classList.remove('like-animation'), 200);
+            }
+        }
+
+
+
+        function toggleReply(tweetId) {
+            const tweet = tweets.find(t => t.id === tweetId);
+            if (tweet) {
+                tweet.replies += 1;
+                renderTweets();
+                
+                // Scroll to compose area
+                document.getElementById('tweetText').focus();
+                document.getElementById('tweetText').placeholder = `Respondendo anonimamente...`;
+                setTimeout(() => {
+                    document.getElementById('tweetText').placeholder = 'O que está acontecendo? (Anônimo)';
+                }, 3000);
+            }
+        }
+
+        function showLikes(tweetId) {
+            const tweet = tweets.find(t => t.id === tweetId);
+            if (tweet && tweet.likedBy && tweet.likedBy.length > 0) {
+                const likesText = tweet.likedBy.slice(0, 10).join(', ');
+                const moreText = tweet.likedBy.length > 10 ? ` e mais ${tweet.likedBy.length - 10} usuários` : '';
+                
+                alert(`Curtido por:\n${likesText}${moreText}`);
+            } else {
+                alert('Nenhuma curtida ainda.');
+            }
+        }
+
+
+
+        function formatTime(timestamp) {
+            const now = new Date();
+            const diff = now - timestamp;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+
+            if (minutes < 1) return 'agora';
+            if (minutes < 60) return `${minutes}m`;
+            if (hours < 24) return `${hours}h`;
+            return `${days}d`;
+        }
+
+
+
+        function toggleTheme() {
+            isDarkTheme = !isDarkTheme;
+            const body = document.body;
+            const themeIcon = document.getElementById('themeIcon');
+            
+            if (isDarkTheme) {
+                body.className = 'bg-gradient-to-br from-gray-900 via-black to-gray-800 min-h-screen text-white';
+                themeIcon.textContent = '🌙';
+            } else {
+                body.className = 'bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 min-h-screen text-gray-900';
+                themeIcon.textContent = '☀️';
+            }
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Check file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Arquivo muito grande! Máximo 5MB.');
+                return;
+            }
+
+            // Check file type
+            if (!file.type.startsWith('image/')) {
+                alert('Por favor, selecione apenas imagens.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentImage = e.target.result;
+                document.getElementById('previewImg').src = currentImage;
+                document.getElementById('imagePreview').classList.remove('hidden');
+                
+                // Enable tweet button if image is selected
+                const charCount = document.getElementById('tweetText').value.length;
+                document.getElementById('tweetBtn').disabled = (charCount === 0 && !currentImage) || charCount > 500;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeImage() {
+            currentImage = null;
+            document.getElementById('imagePreview').classList.add('hidden');
+            document.getElementById('imageInput').value = '';
+            
+            // Update tweet button state
+            const charCount = document.getElementById('tweetText').value.length;
+            document.getElementById('tweetBtn').disabled = (charCount === 0 && !currentImage) || charCount > 500;
+        }
+
+        // Add some random tweets periodically
+        setInterval(() => {
+            const randomTweets = [
+                "O anonimato permite que as ideias sejam julgadas pelo seu mérito, não pela fonte.",
+                "Cada pessoa deveria ter o direito de expressar suas opiniões sem medo de perseguição.",
+                "A transparência do governo é essencial, mas a privacidade do cidadão também é.",
+                "Questionar é um direito fundamental. O anonimato protege esse direito.",
+                "Nem toda verdade precisa de um rosto para ser válida."
+            ];
+            
+            if (Math.random() < 0.3) { // 30% chance
+                const randomText = randomTweets[Math.floor(Math.random() * randomTweets.length)];
+                const newTweet = {
+                    id: tweetIdCounter++,
+                    text: randomText,
+                    timestamp: new Date(),
+                    likes: Math.floor(Math.random() * 50),
+                    retweets: Math.floor(Math.random() * 20),
+                    replies: Math.floor(Math.random() * 15),
+                    liked: false,
+                    retweeted: false,
+                    isOwn: false,
+                    likedBy: []
+                };
+                tweets.unshift(newTweet);
+                if (tweets.length > 20) tweets.pop(); // Keep only 20 tweets
+                renderTweets();
+            }
+        }, 45000); // Every 45 seconds
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'979e1157316a6eae',t:'MTc1Njk5NDk5OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
+
 
